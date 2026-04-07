@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+sqlalchemy
+python-multipart
+httpx
+anthropic
+python-dotenv
+Pillow

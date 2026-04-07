@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: farmer-assistant-backend
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        value: sqlite:///./farmer.db
+      - key: OPEN_METEO_BASE_URL
+        value: https://api.open-meteo.com/v1
+      - key: FRONTEND_ORIGINS
+        value: "*"

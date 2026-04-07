@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <h1 data-i18n="appTitle">Farmer Assistant</h1>
+      <div class="lang-switch">
+        <button class="lang-btn" data-lang="hi">हिंदी</button>
+        <button class="lang-btn" data-lang="en">English</button>
+        <button class="lang-btn" data-lang="pa">ਪੰਜਾਬੀ</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="home" class="tab-page active">
+        <div class="card">
+          <p id="timeDisplay"></p>
+          <p id="locationDisplay" data-i18n="fetchingLocation">Fetching location...</p>
+        </div>
+        <div class="card" id="miniWeather"><p data-i18n="loadingWeather">Loading weather...</p></div>
+        <div class="tile-grid">
+          <button class="feature-tile" data-target="weather">🌦️ <span data-i18n="weather">Weather</span></button>
+          <button class="feature-tile" data-target="crops">🌾 <span data-i18n="crops">Crops</span></button>
+          <button class="feature-tile" data-target="voice">🎤 <span data-i18n="voice">Voice</span></button>
+          <button class="feature-tile" data-target="schemes">🏛️ <span data-i18n="schemes">Schemes</span></button>
+          <button class="feature-tile" data-target="disease">🩺 <span data-i18n="disease">Disease</span></button>
+        </div>
+        <a class="helpline" href="tel:18001801551">Kisan Helpline: 1800-180-1551</a>
+      </section>
+
+      <section id="weather" class="tab-page">
+        <div class="card" id="weatherCurrent"></div>
+        <div id="forecastCards" class="forecast-grid"></div>
+        <div class="card" id="weatherAdvice"></div>
+      </section>
+
+      <section id="crops" class="tab-page">
+        <form id="cropForm" class="card form-grid">
+          <select id="soilType" required></select>
+          <select id="season" required></select>
+          <select id="state" required></select>
+          <button type="submit" class="primary-btn" data-i18n="getRecommendations">Get Recommendations</button>
+        </form>
+        <div class="card">
+          <label data-i18n="sortBy">Sort by:</label>
+          <select id="cropSort">
+            <option value="yield" data-i18n="bestYield">Best Yield</option>
+            <option value="price" data-i18n="bestPrice">Best Price</option>
+            <option value="water" data-i18n="waterEfficient">Water Efficient</option>
+          </select>
+        </div>
+        <div id="cropResults"></div>
+      </section>
+
+      <section id="voice" class="tab-page">
+        <div class="voice-wrap card">
+          <button id="micBtn" class="mic-btn">🎙️</button>
+          <p id="voiceStatus" data-i18n="tapToSpeak">Tap mic to speak</p>
+          <p id="transcriptText"></p>
+          <div class="chip-row">
+            <button class="chip">मौसम कैसा है?</button>
+            <button class="chip">कौन सी फसल उगाऊं?</button>
+            <button class="chip">कोई सरकारी योजना है?</button>
+            <button class="chip">मेरी फसल बीमार है</button>
+          </div>
+          <input id="typedQuery" type="text" placeholder="Type your question..." />
+          <button id="sendTypedQuery" class="primary-btn" data-i18n="askNow">Ask Now</button>
+          <div id="voiceResponse" class="card inner-card"></div>
+        </div>
+      </section>
+
+      <section id="schemes" class="tab-page">
+        <div id="schemesList"></div>
+        <form id="eligibilityForm" class="card form-grid">
+          <h3 data-i18n="eligibilityChecker">Eligibility Checker</h3>
+          <input id="landInput" type="number" step="0.1" placeholder="Land (hectares)" required />
+          <input id="incomeInput" type="number" placeholder="Annual income" required />
+          <select id="stateEligibility" required></select>
+          <label><input type="checkbox" id="bankAccountInput" checked /> <span data-i18n="hasBankAccount">Has bank account</span></label>
+          <button class="primary-btn" type="submit" data-i18n="checkEligibility">Check Eligibility</button>
+        </form>
+        <div id="eligibilityResults"></div>
+      </section>
+
+      <section id="disease" class="tab-page">
+        <div class="card">
+          <label for="diseaseImage" class="upload-zone" id="uploadZone" data-i18n="uploadPrompt">Tap or drop image here</label>
+          <input id="diseaseImage" type="file" accept="image/*" hidden />
+          <img id="diseasePreview" alt="preview" />
+          <button id="detectBtn" class="primary-btn" data-i18n="detectDisease">Detect Disease</button>
+        </div>
+        <div id="diseaseResult"></div>
+        <div class="card">
+          <input id="diseaseSearch" type="text" placeholder="Search diseases..." />
+          <div id="diseaseList"></div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-tab="home">🏠</button>
+      <button class="nav-btn" data-tab="weather">🌤️</button>
+      <button class="nav-btn" data-tab="crops">🌱</button>
+      <button class="nav-btn" data-tab="voice">🎤</button>
+      <button class="nav-btn" data-tab="schemes">🏛️</button>
+      <button class="nav-btn" data-tab="disease">🩺</button>
+    </nav>
+  </div>
+
+  <div id="toast"></div>
+  <script>
+    // Set this in production hosting if backend is on a different domain.
+    // Example: window.FARMER_API_BASE = "https://your-backend.onrender.com/api";
+    window.FARMER_API_BASE = window.FARMER_API_BASE || "";
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>
