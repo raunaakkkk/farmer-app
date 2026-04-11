@@ -105,13 +105,18 @@ def safe_json_load(text: str) -> dict[str, Any]:
 def call_claude(system_prompt: str, user_prompt: str) -> str:
     if not anthropic_client:
         return "Claude API key not configured. Showing fallback response."
-    msg = anthropic_client.messages.create(
-        model="claude-3-5-sonnet-latest",
-        max_tokens=800,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}],
-    )
-    return msg.content[0].text if msg.content else ""
+    try:
+        msg = anthropic_client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=800,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_prompt}],
+        )
+        return msg.content[0].text if msg.content else ""
+    except Exception as e:
+        if "credit balance is too low" in str(e).lower():
+            return "Claude API key is out of credits. Cannot process request."
+        return "An error occurred with the AI assistant."
 
 
 @app.get("/api/weather")
@@ -275,29 +280,43 @@ async def detect_disease(image: UploadFile = File(...)):
         import base64
         base64_image = base64.b64encode(content).decode("utf-8")
 
-        msg = anthropic_client.messages.create(
-            model="claude-3-5-sonnet-latest",
-            max_tokens=900,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": image.content_type or "image/jpeg",
-                                "data": base64_image,
+        try:
+            msg = anthropic_client.messages.create(
+                model="claude-3-5-sonnet-latest",
+                max_tokens=900,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": image.content_type or "image/jpeg",
+                                    "data": base64_image,
+                                },
                             },
-                        },
-                    ],
+                        ],
+                    }
+                ],
+            )
+            raw = msg.content[0].text if msg.content else "{}"
+            parsed = safe_json_load(raw)
+            return parsed
+        except Exception as e:
+            if "credit balance is too low" in str(e).lower():
+                return {
+                    "disease_name_en": "Unknown (Out of API Credits)",
+                    "disease_name_hi": "अज्ञात (API क्रेडिट समाप्त)",
+                    "confidence": 0,
+                    "affected_crop": "Unknown",
+                    "symptoms": "Your Anthropic API key has run out of credits. Please refill your account.",
+                    "organic_treatment": "N/A",
+                    "chemical_treatment": "N/A",
+                    "prevention": "N/A",
                 }
-            ],
-        )
-        raw = msg.content[0].text if msg.content else "{}"
-        parsed = safe_json_load(raw)
-        return parsed
+            raise e
     except HTTPException:
         raise
     except Exception as exc:
