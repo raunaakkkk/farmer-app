@@ -1,23 +1,74 @@
-const PROD_API_BASE = window.FARMER_API_BASE || "";
+function sanitizeApiBase(raw) {
+  if (!raw || typeof raw !== "string") return "";
+  let s = raw.trim().replace(/^['"]+|['"]+$/g, "").replace(/\/+$/, "");
+  s = s.replace(/farmer-app-kq41\.onrender\.com/gi, "farmer-app-kq4l.onrender.com");
+  return s.replace(/\/$/, "");
+}
+
+const PROD_API_BASE = sanitizeApiBase(window.FARMER_API_BASE || "");
 const API_PORTS = [8000, 8010];
 let currentApiPortIndex = 0;
+
 function getApiBase() {
   if (PROD_API_BASE) return PROD_API_BASE.replace(/\/$/, "");
   return `http://127.0.0.1:${API_PORTS[currentApiPortIndex]}/api`;
 }
 
-async function apiFetch(path, options) {
-  const url = `${getApiBase()}${path}`;
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(url, options);
-  } catch (e) {
-    if (!PROD_API_BASE && currentApiPortIndex === 0) {
-      currentApiPortIndex = 1;
-      const fallbackUrl = `${getApiBase()}${path}`;
-      return await fetch(fallbackUrl, options);
-    }
-    throw e;
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
   }
+}
+
+async function apiFetch(path, options = {}) {
+  const base = getApiBase();
+  const url = `${base}${path}`;
+  const isProd = !!PROD_API_BASE;
+  const attempts = isProd ? 5 : 2;
+  const timeoutMs = isProd ? 95000 : 20000;
+
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fetchWithTimeout(url, options, timeoutMs);
+    } catch (e) {
+      lastErr = e;
+      if (!isProd && i === 0 && currentApiPortIndex === 0) {
+        currentApiPortIndex = 1;
+        return apiFetch(path, options);
+      }
+      if (i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, 2500 * (i + 1)));
+      }
+    }
+  }
+  throw lastErr;
+}
+
+async function wakeProductionBackend() {
+  if (!PROD_API_BASE) return;
+  showToast(
+    "Server is waking up… on free hosting the first load can take 1–2 minutes. Please wait.",
+    false
+  );
+  const base = getApiBase();
+  for (let i = 0; i < 8; i++) {
+    try {
+      const res = await fetchWithTimeout(`${base}/health`, { method: "GET" }, 95000);
+      if (res.ok) {
+        showToast("Connected to server.", false);
+        return;
+      }
+    } catch (_) {
+      /* retry */
+    }
+    await new Promise((r) => setTimeout(r, 4000));
+  }
+  showToast("Server is slow or asleep. Try again in a minute or upgrade Render to stay always on.", true);
 }
 let currentLang = localStorage.getItem("lang") || "hi";
 let allDiseases = [];
@@ -442,16 +493,24 @@ function bindEvents() {
   });
 }
 
-function init() {
+async function init() {
   switchLanguage(currentLang);
   populateDropdowns();
   bindEvents();
   initVoice();
   updateTime();
   setInterval(updateTime, 1000);
+  if (PROD_API_BASE) {
+    await wakeProductionBackend();
+  }
   detectLocationAndWeather();
   fetchSchemes();
   fetchDiseases();
 }
 
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", () => {
+  init().catch((err) => {
+    console.error(err);
+    showToast(String(err), true);
+  });
+});
