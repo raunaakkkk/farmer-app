@@ -1,19 +1,24 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Farmer Assistant</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='24' font-size='24'%3E🌾%3C/text%3E%3C/svg%3E">
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='24' font-size='24'%3E🌾%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Noto+Sans:wght@400;500;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <div id="app">
     <header class="topbar">
-      <h1 data-i18n="appTitle">Farmer Assistant</h1>
+      <h1 data-i18n="appTitle">🌾 Farmer Assistant</h1>
       <div class="lang-switch">
         <button class="lang-btn" data-lang="hi">हिंदी</button>
         <button class="lang-btn" data-lang="en">English</button>
@@ -27,7 +32,9 @@
           <p id="timeDisplay"></p>
           <p id="locationDisplay" data-i18n="fetchingLocation">Fetching location...</p>
         </div>
-        <div class="card" id="miniWeather"><p data-i18n="loadingWeather">Loading weather...</p></div>
+        <div class="card" id="miniWeather">
+          <p data-i18n="loadingWeather">Loading weather...</p>
+        </div>
         <div class="tile-grid">
           <button class="feature-tile" data-target="weather">🌦️ <span data-i18n="weather">Weather</span></button>
           <button class="feature-tile" data-target="crops">🌾 <span data-i18n="crops">Crops</span></button>
@@ -86,7 +93,8 @@
           <input id="landInput" type="number" step="0.1" placeholder="Land (hectares)" required />
           <input id="incomeInput" type="number" placeholder="Annual income" required />
           <select id="stateEligibility" required></select>
-          <label><input type="checkbox" id="bankAccountInput" checked /> <span data-i18n="hasBankAccount">Has bank account</span></label>
+          <label><input type="checkbox" id="bankAccountInput" checked /> <span data-i18n="hasBankAccount">Has bank
+              account</span></label>
           <button class="primary-btn" type="submit" data-i18n="checkEligibility">Check Eligibility</button>
         </form>
         <div id="eligibilityResults"></div>
@@ -94,7 +102,8 @@
 
       <section id="disease" class="tab-page">
         <div class="card">
-          <label for="diseaseImage" class="upload-zone" id="uploadZone" data-i18n="uploadPrompt">Tap or drop image here</label>
+          <label for="diseaseImage" class="upload-zone" id="uploadZone" data-i18n="uploadPrompt">Tap or drop image
+            here</label>
           <input id="diseaseImage" type="file" accept="image/*" hidden />
           <img id="diseasePreview" alt="preview" />
           <button id="detectBtn" class="primary-btn" data-i18n="detectDisease">Detect Disease</button>
@@ -124,5 +133,5 @@
   </script>
   <script src="app.js"></script>
 </body>
-</html>
 
+</html>
